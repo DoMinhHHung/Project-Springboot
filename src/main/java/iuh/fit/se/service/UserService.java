@@ -20,10 +20,18 @@ public class UserService {
     public User createUser(UserCreationRequest request){
         User user = new User();
 
+        if(userRepository.existsByUsername(request.getUsername()))
+            throw new RuntimeException("Username already exists");
         user.setUsername(request.getUsername());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
+
+        if(userRepository.existsByEmail(request.getEmail()))
+            throw new RuntimeException("Email already exists");
         user.setEmail(request.getEmail());
+
+        if(userRepository.existsByPhoneNumber(request.getPhoneNumber()))
+            throw new RuntimeException("Phone number already exists");
         user.setPhoneNumber(request.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setDob(request.getDob());

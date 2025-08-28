@@ -5,6 +5,7 @@ import iuh.fit.se.dto.request.UserUpdateRequest;
 import iuh.fit.se.entity.User;
 import iuh.fit.se.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,9 +20,8 @@ public class UserService {
 
     public User createUser(UserCreationRequest request){
         User user = new User();
-
         if(userRepository.existsByUsername(request.getUsername()))
-            throw new RuntimeException("Username already exists");
+            throw  new RuntimeException("Username already exists");
         user.setUsername(request.getUsername());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());

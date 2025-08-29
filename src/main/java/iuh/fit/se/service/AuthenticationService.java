@@ -7,6 +7,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import iuh.fit.se.dto.request.AuthenticationRequest;
 import iuh.fit.se.dto.response.AuthenticationResponse;
 import iuh.fit.se.dto.response.IntrospectResponse;
+import iuh.fit.se.entity.User;
 import iuh.fit.se.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
@@ -14,10 +15,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 import java.util.UUID;
 
 @Service
@@ -33,22 +36,13 @@ public class AuthenticationService {
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         try {
-            var user = userRepository.findByUsername(request.getUsername())
-                    .or(() -> userRepository.findByEmail(request.getEmail()))
-                    .or(() -> userRepository.findByPhoneNumber(request.getPhoneNumber()))
+            var identifier = request.getUsername();
+            var user = userRepository.findByUsername(identifier)
+                    .or(() -> userRepository.findByEmail(identifier))
+                    .or(() -> userRepository.findByPhoneNumber(identifier))
                     .orElse(null);
 
             if (user == null) {
-                return AuthenticationResponse.builder().authenticated(false).token(null).build();
-            }
-
-            if (request.getEmail() != null && !request.getEmail().isBlank()
-                    && !request.getEmail().equals(user.getEmail())) {
-                return AuthenticationResponse.builder().authenticated(false).token(null).build();
-            }
-
-            if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()
-                    && !request.getPhoneNumber().equals(user.getPhoneNumber())) {
                 return AuthenticationResponse.builder().authenticated(false).token(null).build();
             }
 
@@ -57,7 +51,7 @@ public class AuthenticationService {
                 return AuthenticationResponse.builder().authenticated(false).token(null).build();
             }
 
-            var token = generateToken(user.getUsername());
+            var token = generateToken(user);
             return AuthenticationResponse.builder().token(token).authenticated(true).build();
 
         } catch (Exception ex) {
@@ -97,19 +91,19 @@ public class AuthenticationService {
         }
     }
 
-    private String generateToken(String username) {
+    private String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
         Instant now = Instant.now();
         Instant expiry = now.plus(1, ChronoUnit.HOURS);
 
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                .subject(username)
-                .issuer("ace.com")
+                .subject(user.getUsername())
+                .issuer("ace.io")
                 .audience("my-service")
                 .jwtID(UUID.randomUUID().toString())
                 .issueTime(Date.from(now))
                 .expirationTime(Date.from(expiry))
-                .claim("customClaim", "Custom")
+                .claim("scope", buildScope(user))
                 .build();
 
         JWSObject jwsObject = new JWSObject(header, new Payload(claims.toJSONObject()));
@@ -120,5 +114,13 @@ public class AuthenticationService {
         } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String buildScope(User user) {
+        StringJoiner joiner = new StringJoiner(" ");
+        if (!CollectionUtils.isEmpty(user.getRoles()))
+            user.getRoles().forEach(joiner::add);
+
+        return joiner.toString();
     }
 }

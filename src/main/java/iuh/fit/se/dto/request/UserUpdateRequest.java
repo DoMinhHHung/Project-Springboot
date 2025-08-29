@@ -1,5 +1,6 @@
 package iuh.fit.se.dto.request;
 
+import iuh.fit.se.entity.User;
 import jakarta.persistence.Column;
 import lombok.Data;
 
@@ -15,4 +16,5 @@ public class UserUpdateRequest {
     private String email;
     private String password;
     private LocalDate dob;
+    private User.Gender gender;
 }

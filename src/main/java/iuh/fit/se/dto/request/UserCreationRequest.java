@@ -1,5 +1,6 @@
 package iuh.fit.se.dto.request;
 
+import iuh.fit.se.entity.User;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
@@ -18,7 +19,7 @@ public class UserCreationRequest {
     @Column(unique = true)
     @Pattern(regexp = "^[0-9]{10}$", message ="Phone number must have 10 digits")
     private String phoneNumber;
-
+    private User.Gender gender;
     @Column(unique = true)
     @Email(message = "Invalid email address")
     private String email;

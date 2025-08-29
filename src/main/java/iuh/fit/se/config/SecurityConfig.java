@@ -41,6 +41,7 @@ public class SecurityConfig {
         httpSecurity
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/user/myInfo").authenticated()
                         .requestMatchers(HttpMethod.POST, "/auth/create-admin").hasAuthority("SCOPE_ADMIN")
                         .requestMatchers(HttpMethod.GET, "/user", "/user/*").hasAuthority("SCOPE_ADMIN")
                         .anyRequest().authenticated());

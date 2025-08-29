@@ -32,6 +32,11 @@ public class UserController {
         return userService.getUser(userId);
     }
 
+    @GetMapping("/myInfo")
+    User getMyInfo() {
+        return userService.getMyInfo();
+    }
+
     @PutMapping("/{userId}")
     User updateUser(@RequestBody UserUpdateRequest request, @PathVariable String userId) {
         return userService.updateUser(userId, request);

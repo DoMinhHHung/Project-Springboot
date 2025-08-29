@@ -8,6 +8,9 @@ import iuh.fit.se.entity.User;
 import iuh.fit.se.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -76,10 +79,12 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @PreAuthorize("hasRole('SCOPE_ADMIN')")
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
+    @PostAuthorize("returnObject.username == authentication.name or hasRole('SCOPE_ADMIN')")
     public User getUser(String id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
@@ -105,5 +110,12 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found!"));
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    public User getMyInfo() {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        return userRepository.findByUsername(name)
+                .orElseThrow(() -> new RuntimeException("User not existed!"));
     }
 }
